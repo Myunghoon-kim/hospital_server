@@ -65,7 +65,6 @@ public class MemberServlet extends HttpServlet {
 			String id = request.getParameter("id");
 			String pw = request.getParameter("pw");
 
-			System.out.println("id : " + id + "pw" + pw);
 			MemberDAO mDAO = new MemberDAO();
 			Member member = mDAO.doLogin(new Member(id, pw));
 			Gson gson = new Gson();
@@ -93,11 +92,74 @@ public class MemberServlet extends HttpServlet {
 			writer.close();
 
 		} else if (action.equals("logout")) {
-
+			
 		} else if (action.equals("password")) {
+			String id = request.getParameter("id");
+			String old_pw = request.getParameter("old_pw");
+			String new_pw = request.getParameter("new_pw");
+			
+			MemberDAO mDAO = new MemberDAO();
+			Member member = mDAO.doLogin(new Member(id, old_pw));
+			
+			Gson gson = new Gson();
+			JsonObject jsonObj = new JsonObject();
+			String json_result = null;
+			
+			if(member == null){
+				jsonObj.addProperty("success", 0);
+				JsonObject nestObj = new JsonObject();
+				nestObj.addProperty("message", "정상적인 패스워드가 아닙니다.");
+				jsonObj.add("result", nestObj);
+				json_result = gson.toJson(jsonObj);
+			}else{
+				
+				int result = mDAO.updatePassword(id, new_pw);
+				
+				if(result != 0){
+					jsonObj.addProperty("success", 1);
+					JsonObject nestObj = new JsonObject();
+					nestObj.addProperty("message", "정상적인 패스워드가 변경되었습니다.");
+					jsonObj.add("result", nestObj);
+					json_result = gson.toJson(jsonObj);
+				}
+			}
+			
+			
+			PrintWriter writer = response.getWriter();
+			writer.print(json_result);
+			writer.flush();
+			writer.close();
 
+			
 		} else if (action.equals("profile")) {
+			String id = request.getParameter("id");
+			
+			MemberDAO mDAO = new MemberDAO();
+			Member member = mDAO.getMember(id);
+			Gson gson = new Gson();
+			JsonObject jsonObj = new JsonObject();
+			String json_result = null;
+			if (member == null) {
+				jsonObj.addProperty("success", 0);
+				JsonObject nestObj = new JsonObject();
+				nestObj.addProperty("message", "프로필을 찾을 수 없습니다.");
+				jsonObj.add("result", nestObj);
+				json_result = gson.toJson(jsonObj);
+			} else {
+				jsonObj.addProperty("success", 1);
+				JsonObject nestObj = new JsonObject();
+				nestObj.addProperty("message", "프로필 조회가 정상적으로 되었습니다.");
+				nestObj.add("profile", gson.toJsonTree(member));
+				jsonObj.add("result", nestObj);
+				json_result = gson.toJson(jsonObj);
+			}
 
+			PrintWriter writer = response.getWriter();
+			writer.print(json_result);
+			writer.flush();
+			writer.close();
+			
+			
 		} else if (action.equals("register")) {
 			String facebookToken = request.getParameter("access_token");
 			Gson gson = new Gson();

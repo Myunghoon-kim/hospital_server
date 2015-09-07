@@ -10,9 +10,9 @@ import java.util.*;
 
 public class HospitalDAO {
 	private final static String GET_HOSPITAL_INFORM = "SELECT * FROM hospital WHERE hospital_id = ?";
-	private final static String GET_HOSPITAL_LIST = "SELECT * FROM hospital LEFT OUTER JOIN specialist ON hospital.hospital_id = specialist.hospital_id  WHERE specialist.specialist = ?";
-	private final static String GET_HOSPITAL_LOCATION_LIST = "SELECT *, (6371 * acos(cos(radians(? )) * cos(radians(latitude)) * cos(radians(longitude) - radians(? )) + sin(radians(? )) * sin(radians(Latitude )))) AS distance FROM hospital  HAVING distance < 5  ORDER BY distance;";
-
+	private final static String GET_HOSPITAL_LIST = "SELECT * , ROUND(1000 * (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(Latitude ))))) AS distance FROM hospital LEFT OUTER JOIN specialist ON hospital.hospital_id = specialist.hospital_id  WHERE specialist.specialist = ? HAVING distance < 5000  ORDER BY hospital_rate asc,distance desc;";
+	private final static String GET_HOSPITAL_LOCATION_LIST = "SELECT *, (6371 * acos(cos(radians(? )) * cos(radians(latitude)) * cos(radians(longitude) - radians(? )) + sin(radians(? )) * sin(radians(Latitude )))) AS distance FROM hospital  HAVING distance < 5  ORDER BY distance";
+	
 	// 뒤 앞 뒤
 	public Hospital getHospitalInform(int hospital_id) {
 		Connection con = null;
@@ -48,7 +48,7 @@ public class HospitalDAO {
 
 	}
 
-	public ArrayList<Hospital> getHospitalList(int specialist) {
+	public ArrayList<Hospital> getHospitalList(double longitude,double latitude,int specialist) {
 		Connection con = null;
 		PreparedStatement stmt = null;
 		ResultSet rst = null;
@@ -57,7 +57,10 @@ public class HospitalDAO {
 		try {
 			con = JDBCUtil.getConnection();
 			stmt = con.prepareStatement(GET_HOSPITAL_LIST);
-			stmt.setInt(1, specialist);
+			stmt.setDouble(1, latitude);
+			stmt.setDouble(2, longitude);
+			stmt.setDouble(3, latitude);
+			stmt.setInt(4, specialist);
 
 			rst = stmt.executeQuery();
 			while (rst.next()) {
@@ -69,7 +72,7 @@ public class HospitalDAO {
 						rst.getString("introduction"),
 						rst.getString("address"), rst.getString("tel"), rst
 								.getDouble("latitude"), rst
-								.getDouble("longitude")));
+								.getDouble("longitude"),rst.getDouble("distance")));
 			}
 
 		} catch (SQLException e) {
@@ -115,5 +118,16 @@ public class HospitalDAO {
 		}
 
 		return hospitalList;
+	}
+
+	public ArrayList<Hospital> getSymptomHospitalList(double longitude,
+			double latitude, int symptom_type) {
+		// TODO Auto-generated method stub
+		
+		
+		
+		
+		
+		return null;
 	}
 }
