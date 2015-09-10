@@ -6,6 +6,7 @@ import hospitalServer.webdata.vo.Hospital;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Enumeration;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -63,88 +64,113 @@ public class HospitalServlet extends HttpServlet {
 		String uri = request.getRequestURI();
 		int lastIndex = uri.lastIndexOf("/");
 		String action = uri.substring(lastIndex + 1);
-		
-		
+
 		if (action.equals("hospital")) {
-			double longitude = Double.parseDouble(request
-					.getParameter("longitude"));
-			double latitude = Double.parseDouble(request
-					.getParameter("latitude")); 
-			int hospital_type = Integer.parseInt(request
-					.getParameter("hospital_type"));
-			HospitalDAO hDAO = new HospitalDAO();
-			ArrayList<Hospital> hospitalList = hDAO
-					.getHospitalList(longitude,latitude,hospital_type);
-
-			Gson gson = new Gson();
-			JsonObject jsonObj = new JsonObject();
-			String json_result = null;
-			if (hospitalList.isEmpty()) {
-				jsonObj.addProperty("success", 0);
-				JsonObject nestObj = new JsonObject();
-				nestObj.addProperty("message", "병원 리스트가 없습니다.");
-				jsonObj.add("result", nestObj);
-
-				json_result = gson.toJson(jsonObj);
-			} else {
-
-				jsonObj.addProperty("success", 1);
-				JsonObject nestObj = new JsonObject();
-
-				if (hospital_type == 9) {
-					nestObj.addProperty("message", "약국 리스트가 조회되었습니다.");
-				} else {
-					nestObj.addProperty("message", "병원 리스트가 조회되었습니다.");
+			if (request.getParameter("hospital_id") == null) {
+				Enumeration<String> params = request.getParameterNames();
+				while (params.hasMoreElements()) {
+					System.out.println(params.nextElement());
 				}
 
-				nestObj.add("hospital_list", gson.toJsonTree(hospitalList));
-				jsonObj.add("result", nestObj);
+				System.out.println(request.getParameter("longitude"));
+				double longitude = Double.parseDouble(request
+						.getParameter("longitude"));
 
-				json_result = gson.toJson(jsonObj);
+				System.out.println(longitude);
+				double latitude = Double.parseDouble(request
+						.getParameter("latitude"));
+				int hospital_type = Integer.parseInt(request
+						.getParameter("hospital_type"));
+				HospitalDAO hDAO = new HospitalDAO();
+				ArrayList<Hospital> hospitalList = hDAO.getHospitalList(
+						longitude, latitude, hospital_type);
+
+				Gson gson = new Gson();
+				JsonObject jsonObj = new JsonObject();
+				String json_result = null;
+				if (hospitalList.isEmpty()) {
+					jsonObj.addProperty("success", 0);
+					JsonObject nestObj = new JsonObject();
+					nestObj.addProperty("message", "병원 리스트가 없습니다.");
+					jsonObj.add("result", nestObj);
+
+					json_result = gson.toJson(jsonObj);
+				} else {
+
+					jsonObj.addProperty("success", 1);
+					JsonObject nestObj = new JsonObject();
+
+					if (hospital_type == 9) {
+						nestObj.addProperty("message", "약국 리스트가 조회되었습니다.");
+					} else {
+						nestObj.addProperty("message", "병원 리스트가 조회되었습니다.");
+					}
+
+					nestObj.add("hospital_list", gson.toJsonTree(hospitalList));
+					jsonObj.add("result", nestObj);
+
+					json_result = gson.toJson(jsonObj);
+				}
+
+				System.out.println(json_result);
+				PrintWriter writer = response.getWriter();
+				writer.print(json_result);
+				writer.flush();
+				writer.close();
+			} else {
+				int hospital_id = Integer.parseInt(request.getParameter("hospital_id"));
+
+				System.out.println(hospital_id);
+				HospitalDAO hDAO = new HospitalDAO();
+				Hospital hospital = hDAO.getHospitalInform(hospital_id);
+				Gson gson = new Gson();
+				JsonObject jsonObj = new JsonObject();
+				String json_result = null;
+				if (hospital == null) {
+					jsonObj.addProperty("success", 0);
+					JsonObject nestObj = new JsonObject();
+					nestObj.addProperty("message", "병원 리스트가 없습니다.");
+					jsonObj.add("result", nestObj);
+
+					json_result = gson.toJson(jsonObj);
+				} else {
+
+					jsonObj.addProperty("success", 1);
+					JsonObject nestObj = new JsonObject();
+
+					nestObj.addProperty("message", "정상적으로 조회되었습니다.");
+
+					nestObj.add("hospital_information",
+							gson.toJsonTree(hospital));
+					jsonObj.add("result", nestObj);
+
+					json_result = gson.toJson(jsonObj);
+				}
+				PrintWriter writer = response.getWriter();
+				writer.print(json_result);
+				writer.flush();
+				writer.close();
+
 			}
 
-			System.out.println(json_result);
-			PrintWriter writer = response.getWriter();
-			writer.print(json_result);
-			writer.flush();
-			writer.close();
-
-		}else if(action.equals("symptom_type")){
+		} else if (action.equals("symptom_type")) {
 			double longitude = Double.parseDouble(request
 					.getParameter("longitude"));
 			double latitude = Double.parseDouble(request
 					.getParameter("latitude"));
-			int symptom_type = Integer.parseInt(request
-					.getParameter("symptom_type"));
+			String symptom_type = request.getParameter("symptom_type");
 			HospitalDAO hDAO = new HospitalDAO();
-			ArrayList<Hospital> hospitalList = hDAO
-					.getSymptomHospitalList(longitude,latitude,symptom_type);
+			ArrayList<Hospital> hospitalList = hDAO.getSymptomList(longitude,
+					latitude, symptom_type);
 
-			
-			/* 
-			 * 내과 0
-			 * 외과 1
-			 * 치과 2
-			 * 이비인후과 3
-			 * 피부과 4
-			 * 성형외과 5
-			 * 종합병원 6
-			 * 안과 7
-			 * 한의원 8
-			 * 약국 9
+			/*
+			 * 내과 0 외과 1 치과 2 이비인후과 3 피부과 4 성형외과 5 종합병원 6 안과 7 한의원 8 약국 9
 			 * 
-			 * 눈 : 7,6
-			 * 코 : 3,0,6
-			 * 귀 : 3,0,6
-			 * 열,감기 : 0,3,6
-			 * 머리아픔 : 0,6
-			 * 이 : 2,6
-			 * 무릎 : 1,6
-			 * 피부 : 4,6
 			 * 
-			 * */
-			
-			
+			 * 눈 : 7,6 코 : 3,0,6 귀 : 3,0,6 열,감기 : 0,3,6 머리아픔 : 0,6 이 : 2,6 무릎 :
+			 * 1,6 피부 : 4,6
+			 */
+
 			Gson gson = new Gson();
 			JsonObject jsonObj = new JsonObject();
 			String json_result = null;
@@ -171,14 +197,15 @@ public class HospitalServlet extends HttpServlet {
 			writer.flush();
 			writer.close();
 
-		}else if (action.equals("map")) {
-		
+		} else if (action.equals("map")) {
+
 			double longitude = Double.parseDouble(request
 					.getParameter("longitude"));
 			double latitude = Double.parseDouble(request
 					.getParameter("latitude"));
 			HospitalDAO hDAO = new HospitalDAO();
-			ArrayList<Hospital> hospitalList = hDAO.getHospitalLocationList(longitude, latitude);
+			ArrayList<Hospital> hospitalList = hDAO.getHospitalLocationList(
+					longitude, latitude);
 			Gson gson = new Gson();
 			JsonObject jsonObj = new JsonObject();
 			String json_result = null;
@@ -207,37 +234,7 @@ public class HospitalServlet extends HttpServlet {
 			writer.print(json_result);
 			writer.flush();
 			writer.close();
-			
-		} else {
-			int hospital_number = Integer.parseInt(action);
-			HospitalDAO hDAO = new HospitalDAO();
-			Hospital hospital = hDAO.getHospitalInform(hospital_number);
-			Gson gson = new Gson();
-			JsonObject jsonObj = new JsonObject();
-			String json_result = null;
-			if (hospital == null) {
-				jsonObj.addProperty("success", 0);
-				JsonObject nestObj = new JsonObject();
-				nestObj.addProperty("message", "병원 리스트가 없습니다.");
-				jsonObj.add("result", nestObj);
 
-				json_result = gson.toJson(jsonObj);
-			} else {
-
-				jsonObj.addProperty("success", 1);
-				JsonObject nestObj = new JsonObject();
-
-				nestObj.addProperty("message", "정상적으로 조회되었습니다.");
-
-				nestObj.add("hospital_information", gson.toJsonTree(hospital));
-				jsonObj.add("result", nestObj);
-
-				json_result = gson.toJson(jsonObj);
-			}
-			PrintWriter writer = response.getWriter();
-			writer.print(json_result);
-			writer.flush();
-			writer.close();
 		}
 	}
 }

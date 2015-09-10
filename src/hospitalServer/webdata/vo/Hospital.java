@@ -1,7 +1,5 @@
 package hospitalServer.webdata.vo;
 
-import java.util.ArrayList;
-
 public class Hospital {
 	private int hospital_id;
 	private String hospital_name;
@@ -16,7 +14,7 @@ public class Hospital {
 	private double longitude;
 	private double distance;
 	
-	private ArrayList<Integer> specialist;
+	private String specialist;
 
 	
 	
@@ -56,11 +54,29 @@ public class Hospital {
 		this.longitude = longitude;
 		this.distance = distance;
 	}
-	
 	public Hospital(int hospital_id, String hospital_name,
 			double hospital_rate, String hospital_picture, String open_hour,
 			String close_hour, String introduction, String address,String tel,
-			double latitude, double longitude, ArrayList<Integer> specialist) {
+			double latitude, double longitude, double distance,String specialist) {
+		super();
+		this.hospital_id = hospital_id;
+		this.hospital_name = hospital_name;
+		this.hospital_rate = hospital_rate;
+		this.hospital_picture = hospital_picture;
+		this.open_hour = open_hour;
+		this.close_hour = close_hour;
+		this.introduction = introduction;
+		this.address = address;
+		this.tel = tel;
+		this.latitude = latitude;
+		this.longitude = longitude;
+		this.distance = distance;
+		this.specialist = specialist;
+	}
+	public Hospital(int hospital_id, String hospital_name,
+			double hospital_rate, String hospital_picture, String open_hour,
+			String close_hour, String introduction, String address,String tel,
+			double latitude, double longitude, String specialist) {
 		super();
 		this.hospital_id = hospital_id;
 		this.hospital_name = hospital_name;
@@ -164,11 +180,11 @@ public class Hospital {
 		this.longitude = longitude;
 	}
 
-	public ArrayList<Integer> getSpecialist() {
+	public String getSpecialist() {
 		return specialist;
 	}
 
-	public void setSpecialist(ArrayList<Integer> specialist) {
+	public void setSpecialist(String specialist) {
 		this.specialist = specialist;
 	}
 
