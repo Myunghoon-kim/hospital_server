@@ -10,7 +10,7 @@ import java.util.Date;
 import hospitalServer.webdata.vo.Review;
 
 public class ReviewDAO {
-	private static final String INSERT_REVIEW = "INSERT INTO review(review_content, review_rate, ,id, hospital_id) values(?,?,?,?)";
+	private static final String INSERT_REVIEW = "INSERT INTO review(review_content, review_rate ,id, hospital_id) values(?,?,?,?)";
 	private static final String GET_REVIEW_LIST = "SELECT * FROM review WHERE hospital_id = ?";
 	
 	
@@ -24,6 +24,7 @@ public class ReviewDAO {
 			stmt.setDouble(2, review.getReview_rate());
 			stmt.setString(3, review.getId());
 			stmt.setInt(4, review.getHospital_id());
+			System.out.println(stmt);
 			int result = stmt.executeUpdate();
 			if(result == 1){
 				return 1;

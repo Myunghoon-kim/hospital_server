@@ -1,7 +1,9 @@
 package hospitalServer.webdata.servlet;
 
 import hospitalServer.webdata.dao.HospitalDAO;
+import hospitalServer.webdata.dao.ReviewDAO;
 import hospitalServer.webdata.vo.Hospital;
+import hospitalServer.webdata.vo.Review;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -73,8 +75,7 @@ public class HospitalServlet extends HttpServlet {
 				}
 
 				System.out.println(request.getParameter("longitude"));
-				double longitude = Double.parseDouble(request
-						.getParameter("longitude"));
+				double longitude = Double.parseDouble(request.getParameter("longitude"));
 
 				System.out.println(longitude);
 				double latitude = Double.parseDouble(request
@@ -122,7 +123,9 @@ public class HospitalServlet extends HttpServlet {
 
 				System.out.println(hospital_id);
 				HospitalDAO hDAO = new HospitalDAO();
+				ReviewDAO rDAO = new ReviewDAO();
 				Hospital hospital = hDAO.getHospitalInform(hospital_id);
+				ArrayList<Review> reviewList = rDAO.getReviewList(hospital_id);
 				Gson gson = new Gson();
 				JsonObject jsonObj = new JsonObject();
 				String json_result = null;
@@ -142,10 +145,13 @@ public class HospitalServlet extends HttpServlet {
 
 					nestObj.add("hospital_information",
 							gson.toJsonTree(hospital));
+					nestObj.add("review", gson.toJsonTree(reviewList));
 					jsonObj.add("result", nestObj);
 
 					json_result = gson.toJson(jsonObj);
 				}
+				
+				System.out.println(json_result);
 				PrintWriter writer = response.getWriter();
 				writer.print(json_result);
 				writer.flush();
@@ -158,11 +164,13 @@ public class HospitalServlet extends HttpServlet {
 					.getParameter("longitude"));
 			double latitude = Double.parseDouble(request
 					.getParameter("latitude"));
-			String symptom_type = request.getParameter("symptom_type");
+			int symptom_type = Integer.parseInt(request.getParameter("symptom_type"));
+			
+			System.out.println(symptom_type);
 			HospitalDAO hDAO = new HospitalDAO();
 			ArrayList<Hospital> hospitalList = hDAO.getSymptomList(longitude,
 					latitude, symptom_type);
-
+			
 			/*
 			 * 내과 0 외과 1 치과 2 이비인후과 3 피부과 4 성형외과 5 종합병원 6 안과 7 한의원 8 약국 9
 			 * 
@@ -185,12 +193,14 @@ public class HospitalServlet extends HttpServlet {
 
 				jsonObj.addProperty("success", 1);
 				JsonObject nestObj = new JsonObject();
+				nestObj.addProperty("message", "병원 리스트가 조회되었습니다.");
+				
 				nestObj.add("hospital_list", gson.toJsonTree(hospitalList));
 				jsonObj.add("result", nestObj);
 
 				json_result = gson.toJson(jsonObj);
 			}
-
+			
 			System.out.println(json_result);
 			PrintWriter writer = response.getWriter();
 			writer.print(json_result);
@@ -198,7 +208,7 @@ public class HospitalServlet extends HttpServlet {
 			writer.close();
 
 		} else if (action.equals("map")) {
-
+			System.out.println("*map*");
 			double longitude = Double.parseDouble(request
 					.getParameter("longitude"));
 			double latitude = Double.parseDouble(request
@@ -235,6 +245,43 @@ public class HospitalServlet extends HttpServlet {
 			writer.flush();
 			writer.close();
 
+		} else if(action.equals("review")){
+			int hospital_id = Integer.parseInt(request.getParameter("hospital_id"));
+			String review_content = request.getParameter("review_content");
+			double review_rate  = Double.parseDouble(request.getParameter("review_rate"));
+			String id = request.getParameter("id");
+			
+			ReviewDAO rDAO = new ReviewDAO();
+			int result = rDAO.insertReview(new Review(review_content, review_rate, id, hospital_id));
+			Gson gson = new Gson();
+			JsonObject jsonObj = new JsonObject();
+			String json_result = null;
+			
+			if(result == 1){
+				jsonObj.addProperty("success", 1);
+				JsonObject nestObj = new JsonObject();
+
+				nestObj.addProperty("message", "success");
+
+				jsonObj.add("result", nestObj);
+
+			}else{
+				jsonObj.addProperty("success", 0);
+				JsonObject nestObj = new JsonObject();
+
+				nestObj.addProperty("message", "fail");
+
+				jsonObj.add("result", nestObj);
+
+			}
+			
+			json_result = gson.toJson(jsonObj);
+			System.out.println(json_result);
+			PrintWriter writer = response.getWriter();
+			writer.print(json_result);
+			writer.flush();
+			writer.close();
+			
 		}
 	}
 }
